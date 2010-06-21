@@ -96,6 +96,10 @@ for host in ${list[*]}
 do
 echo $host
 case $2 in
+    update-cmt)
+        ssh $host "cd cmt && git pull"
+        ssh $host "cp cmt/* ."
+    ;;
     ssh-deploy-key)
         ssh $host mkdir -p /root/.ssh
         scp /root/.ssh/id_rsa.pub $host:/root/.ssh/authorized_keys_tmp
