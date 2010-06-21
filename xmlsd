@@ -1,0 +1,20 @@
+#!/bin/sh
+
+command=$1
+if [ -n $2 ]
+then
+    max=$2
+else
+    max=65535
+fi
+
+for i in *
+do
+    if [ `echo $i | awk '{print /^lsd/}'` -ne 0  ]
+    then
+        if [ `echo $i | cut -c 5-` -lt $max ]
+        then 
+            xm $command $i
+        fi
+    fi
+done

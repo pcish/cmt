@@ -1,0 +1,186 @@
+#!/bin/sh
+
+pause=3
+nodes=20
+perl /root/nodelist.pl $nodes 0
+. /root/nodelist
+#nodelist_lsd_mon=(lsd-mon0 lsd-mon1 lsd-mon2)
+nodelist_lsd_mon=(lsd-mon0)
+nodelist_lsd_mds=(lsd-mds0 lsd-mds1)
+nodelist_lsd_all=(${nodelist_lsd_mon[*]} ${nodelist_lsd_mds[*]} ${nodelist_lsd_osd[*]})
+nodelist_b=(b301 b302 b303 b304 b305 b306)
+nodelist_server=(a615 a616)
+nodelist_r410=(a601 a602)
+nodelist_hypervisor=(a705 a706 a707 a708 a709 a710 a711 a712 a713 a714 a715 a716)
+nodelist_phy=(${nodelist_server[*]} ${nodelist_hypervisor[*]})
+nodelist_tcds_mon=(tcds-mon0 tcds-mon1 tcds-osd0 tcds-osd1 tcds-osd2)
+nodelist_tcds_osd=(tcds-osd0 tcds-osd1 tcds-osd2 tcds-osd3 tcds-osd4 tcds-osd5 tcds-osd6 tcds-osd7)
+nodelist_tcds=(tcds-mon0 tcds-mon1 tcds-mds0 tcds-mds1 tcds-osd0 tcds-osd1 tcds-osd2 tcds-osd3 tcds-osd4 tcds-osd5 tcds-osd6 tcds-osd7)
+nodelist_ctdb=(tcds-ctdb0 tcds-ctdb1 tcds-ctdb2)
+nodelist_min=(min-node0 min-node1 min-node2 min-node3 min-node4)
+nodelist_min_hypervisor=(a712 a713 a714 a715 a716)
+nodelist_all=(${nodelist_phy[*]} ${nodelist_tcds[*]})
+
+usage ()
+{
+    cat >&2 << EOF
+Usage: tcct <NODE(S)> <COMMAND>
+    Runs the given command on the specified node(s)
+    <NODE(S)>     can be any hostname or IP, or a comma separated list of 
+                  hostnames or IPs, or a predefined list
+    <COMMAND>     can be any command or a predefined macro
+EOF
+    exit 1
+}
+
+# Check input arguments
+if [ "$1" == "" -o "$2" == "" ]; 
+then
+    usage
+fi
+
+# Expand host argument
+case $1 in
+    server)
+        list=${nodelist_server[*]}
+    ;;
+    r410)
+        list=${nodelist_r410[*]}
+    ;;
+    hypervisor|xen)
+        list=${nodelist_hypervisor[*]}
+    ;;
+    phy|physical)
+        list=${nodelist_phy[*]}
+    ;;
+    tcds|vm)
+        list=${nodelist_tcds[*]}
+    ;;
+    tcds-osd)
+        list=${nodelist_tcds_osd[*]}
+    ;;
+    tcds-mon)
+        list=${nodelist_tcds_mon[*]}
+    ;;
+    ctdb)
+        list=${nodelist_ctdb[*]}
+    ;;
+    min)
+        list=${nodelist_min[*]}
+    ;;
+    min-xen|min-hypervisor|min-phy)
+        list=${nodelist_min_hypervisor[*]}
+    ;;
+    all)
+        list=${nodelist_all[*]}
+    ;;
+    b)
+        list=${nodelist_b[*]}
+    ;;
+    lsd-osd|b-osd)
+        list=${nodelist_lsd_osd[*]}
+    ;;
+    lsd-all|b-all)
+        list=${nodelist_lsd_all[*]}
+    ;;
+    lsd-mon|b-mon)
+        list=${nodelist_lsd_mon[*]}
+    ;;
+    *)
+        list=`echo $1 | cut -d',' -f1- --output-delimiter=' '`
+    ;;
+esac
+
+# Expand command argument
+for host in ${list[*]}
+do
+echo $host
+case $2 in
+    ssh-deploy-key)
+        ssh $host mkdir -p /root/.ssh
+        scp /root/.ssh/id_rsa.pub $host:/root/.ssh/authorized_keys_tmp
+        ssh $host 'cat /root/.ssh/authorized_keys_tmp >> /root/.ssh/authorized_keys2'
+        ssh $host rm -f /root/.ssh/authorized_keys_tmp
+    ;;
+    ntp)
+        ssh $host "echo 'server tw.pool.ntp.org' > /etc/ntp.conf"
+        ssh $host service ntp start
+    ;;
+    zypper-ar|zypper-add-repo)
+        ssh $host zypper ar http://download.opensuse.org/distribution/11.2/repo/oss/ repo-oss
+        ssh $host zypper ar http://download.opensuse.org/update/11.2/ repo-update
+        ssh $host zypper refresh
+    ;;
+    install-ceph)
+        if [ -z $3 ]
+        then
+            dir=ceph
+        else
+            dir=$3
+        fi
+        ssh $host umount -f /usr/src
+        ssh $host mount.cifs //a616/src /usr/src -o password=novirus
+        ssh $host make -C /usr/src/$dir install
+        ssh $host umount /usr/src
+    ;;
+    restart-ceph|ceph-restart)
+        ssh $host /etc/init.d/ceph restart
+        sleep $pause
+    ;;
+    ceph-stop|stop-ceph)
+        ssh $host /etc/init.d/ceph stop
+    ;;
+    ceph-start|start-ceph)
+        ssh $host /etc/init.d/ceph start
+        sleep $pause
+    ;;
+    ceph-version|ceph-v)
+        ssh $host ceph -v
+    ;;
+    check-time|check-date)
+        echo "remote:local = `ssh $host date +%s`:`date +%s`"
+    ;;
+    clean-all)
+        ssh $host rm -rf /data/*
+        ssh $host rm -rf /var/log/ceph/*
+    ;;
+    clean-log|rm-log)
+        ssh $host rm -rf /var/log/ceph/*
+    ;;
+    distribute)
+        scp $3 $host:$3
+    ;;
+    add-users)
+        ssh $host groupadd tcds
+        uid=1010
+        for user in jeff sloan henry herb cc paul lisa jerry
+        do
+            ssh $host mkdir /home/$user
+            ssh $host useradd -G tcds,wheel -u $uid -d /home/$user $user
+            ssh $host "echo novirus | passwd --stdin $user"
+            ssh $host chown $user:users /home/$user
+            uid=`expr $uid + 1`
+        done
+    ;;
+    clone-basevm)
+        ssh $host mkdir /mnt/vmimages
+        ssh $host 'mount.cifs //a615/vmimages /mnt/vmimages -o password=novirus'
+        ssh $host perl /mnt/vmimages/clone.pl /mnt/vmimages/disk0 $3
+        ssh $host umount /mnt/vmimages
+    ;;
+    print-list)
+        #echo $host
+    ;;
+    prep-vmdisks)
+        ssh $host parted /dev/xvdb mklabel msdos
+        ssh $host "parted /dev/xvdb 'mkpart primary ext3 0 -1s'"
+        ssh $host mkfs.ext3 /dev/xvdb1 &
+        ssh $host parted /dev/xvdc mklabel msdos
+        ssh $host "parted /dev/xvdc 'mkpart primary ext3 0 -1s'"
+        ssh $host mkfs.ext3 /dev/xvdc1 &
+    ;;
+    *)
+        ssh $host $2
+    ;;
+esac
+done

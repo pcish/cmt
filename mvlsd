@@ -1,0 +1,7 @@
+#!/bin/sh
+
+maxcpu=8
+
+rm lsd-$1
+mv /etc/xen/images/lsd-$1 /etc/xen/images/lsd-$2
+perl massclone.pl disk0 lsd-$2 $2 `expr $2 % $maxcpu` 1 0
