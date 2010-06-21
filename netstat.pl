@@ -1,5 +1,10 @@
 use Sys::Statistics::Linux::NetStats;
 
+if (!defined($ARGV[0]) {
+    print "Must supply interface argument.\n"
+    exit;
+}
+my $iface = $ARGV[0];
 my $lxs = Sys::Statistics::Linux::NetStats->new;
 $lxs->init;
 my $stat;
@@ -8,9 +13,8 @@ $| = 1;
 while(1) {
     sleep 2;
     $stat = $lxs->get;
-    $br0_stat = %$stat->{'br0'};
-    #print "", $br0_stat->{'rxbyt'}, "\n";
-    while (($k, $v) = each %$br0_stat) {
+    $iface_stat = %$stat->{$iface};
+    while (($k, $v) = each %$iface_stat) {
         if ($k eq "rxbyt" || $k eq "rxpcks" ||
             $k eq "txbyt" || $k eq "txpcks" ) {
             print $k.".".$v."\t";
