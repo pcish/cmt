@@ -9,8 +9,8 @@ id_M=`expr $id_m + 20`
 i=$id_m
 i=0
 id_M=100
-writeconfig=`if [ \`hostname\` = "b306" ]; then echo 1; fi`
-writeimages=`if [ \`hostname\` != "b306" ]; then echo 1; fi`
+writeconfig=`if [ \`hostname\` = "b306" ]; then echo 1; else echo 0; fi`
+writeimages=`if [ \`hostname\` != "b306" ]; then echo 1; else echo 0; fi`
 while [ $i -lt $id_M ]
 do
     echo $i
