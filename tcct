@@ -96,6 +96,10 @@ for host in ${list[*]}
 do
 echo $host
 case $2 in
+    sysctl)
+        scp /etc/sysctl.conf $host:/etc/sysctl.conf
+        ssh $host sysctl -p
+    ;;
     update-cmt)
         ssh $host "cd cmt && git pull"
         ssh $host "cp cmt/* ."
