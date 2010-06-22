@@ -4,7 +4,7 @@ if (!defined($ARGV[0])) {
     print "Must supply interface argument.\n";
     exit;
 }
-if ($ARGV[0] == '-l') {
+if ($ARGV[0] eq '-l') {
     my $lxs = Sys::Statistics::Linux::NetStats->new;
     $lxs->init;
     $stat = $lxs->get;
