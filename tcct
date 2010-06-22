@@ -145,6 +145,7 @@ case $2 in
         echo "remote:local = `ssh $host date +%s`:`date +%s`"
     ;;
     clean-all)
+        ssh $host rm -rf /core
         ssh $host rm -rf /data/*
         ssh $host rm -rf /var/log/ceph/*
     ;;

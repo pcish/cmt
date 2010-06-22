@@ -1,7 +1,7 @@
 use Sys::Statistics::Linux::NetStats;
 
-if (!defined($ARGV[0]) {
-    print "Must supply interface argument.\n"
+if (!defined($ARGV[0])) {
+    print "Must supply interface argument.\n";
     exit;
 }
 my $iface = $ARGV[0];
