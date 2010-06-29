@@ -1,0 +1,21 @@
+#!/bin/sh
+
+command=$1
+if [ $# -ge 2 ]
+then
+    max=$2
+else
+    max=65535
+fi
+
+for i in *
+do
+    if [ `echo $i | awk '{print /^lsd/}'` -ne 0  ]
+    then
+        if [ `echo $i | cut -c 5-` -lt $max ]
+        then 
+            sed 's/maxmem=1024/maxmem=2048/'
+            sed 's/memory=1024/memory=2048/'
+        fi
+    fi
+done

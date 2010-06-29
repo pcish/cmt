@@ -1,7 +1,7 @@
 #!/bin/sh
 
 pause=3
-nodes=20
+nodes=50
 perl /root/nodelist.pl $nodes 0
 . /root/nodelist
 #nodelist_lsd_mon=(lsd-mon0 lsd-mon1 lsd-mon2)
@@ -9,6 +9,7 @@ nodelist_lsd_mon=(lsd-mon0)
 nodelist_lsd_mds=(lsd-mds0 lsd-mds1)
 nodelist_lsd_all=(${nodelist_lsd_mon[*]} ${nodelist_lsd_mds[*]} ${nodelist_lsd_osd[*]})
 nodelist_b=(b301 b302 b303 b304 b305 b306)
+nodelist_b2=(a508 a509 a510 a511 a512 a513)
 nodelist_server=(a615 a616)
 nodelist_r410=(a601 a602)
 nodelist_hypervisor=(a705 a706 a707 a708 a709 a710 a711 a712 a713 a714 a715 a716)
@@ -77,6 +78,9 @@ case $1 in
     b)
         list=${nodelist_b[*]}
     ;;
+    b2)
+        list=${nodelist_b2[*]}
+    ;;
     lsd-osd|b-osd)
         list=${nodelist_lsd_osd[*]}
     ;;
@@ -127,7 +131,7 @@ case $2 in
             dir=$3
         fi
         ssh $host umount -f /usr/src
-        ssh $host mount.cifs //a616/src /usr/src -o password=novirus
+        ssh $host mount.cifs //usr/src /usr/src -o password=novirus
         ssh $host make -C /usr/src/$dir install
         ssh $host umount /usr/src
     ;;
