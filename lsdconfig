@@ -10,7 +10,7 @@ fi
 
 for i in *
 do
-    if [ `echo $i | awk '{print /^lsd/}'` -ne 0  ]
+    if [ `echo $i | awk '{print /^lsd-/}'` -ne 0  ]
     then
         if [ `echo $i | cut -c 5-` -lt $max ]
         then 
