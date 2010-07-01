@@ -121,6 +121,7 @@ case $2 in
     zypper-ar|zypper-add-repo)
         ssh $host zypper ar http://download.opensuse.org/distribution/11.2/repo/oss/ repo-oss
         ssh $host zypper ar http://download.opensuse.org/update/11.2/ repo-update
+        #ssh $host zypper ar http://download.opensuse.org/debug/update/11.2/ debug
         ssh $host zypper refresh
     ;;
     install-ceph)
