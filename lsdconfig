@@ -14,8 +14,8 @@ do
     then
         if [ `echo $i | cut -c 5-` -lt $max ]
         then 
-            sed -i 's/maxmem=1024/maxmem=2048/' $i > $i.tmp
-            sed -i 's/memory=1024/memory=2048/' $i > $i.tmp
+            sed -i 's/maxmem=1024/maxmem=2048/' $i
+            sed -i 's/memory=1024/memory=2048/' $i
         fi
     fi
 done
